@@ -3,6 +3,7 @@ import time
 import glob
 import os
 from emailing import send_email
+from threading import Thread
 
 video = cv2.VideoCapture(0)
 # wait for 1 second for camera to load
@@ -62,9 +63,14 @@ while True:
     status_list = status_list[-2:]
 
     if status_list[0] == 1 and status_list[1] == 0:
-        send_email(image_with_object)
-        clean_folder()
+        email_thread = Thread(target=send_email,
+                              args=(image_with_object,)) # add , to make it as tuple
+        # allow send_email funtion to be executed in the background
+        email_thread.daemon = True
+        clean_thread = Thread(target=clean_folder)
+        clean_thread.daemon = True
 
+        email_thread.start()
 
     cv2.imshow("Video", frame)
 
@@ -74,3 +80,5 @@ while True:
         break
 
 video.release()
+
+clean_thread.start()
